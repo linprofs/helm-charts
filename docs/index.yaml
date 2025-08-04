@@ -3,7 +3,7 @@ entries:
   mariadb:
   - apiVersion: v2
     appVersion: 11.8.2
-    created: "2025-08-04T08:14:28.012260905+01:00"
+    created: "2025-08-04T10:30:03.246414197+01:00"
     description: A Helm chart for MariaDB on Kubernetes
     digest: 6f343cee4dd92d7b2a022634ec69a2858c0ffada58e1abcab6cf45b5f6016167
     icon: https://mariadb.com/wp-content/uploads/2019/11/mariadb-logo_black-transparent-600x150.png
@@ -16,6 +16,26 @@ entries:
     name: mariadb
     type: application
     urls:
-    - https://linprofs.github.io/helm-charts/mariadb-4.4.0.tgz
+    - https://linprofs.github.io/helm-charts/docs/mariadb-4.4.0.tgz
     version: 4.4.0
-generated: "2025-08-04T08:14:28.010808659+01:00"
+  passbolt:
+  - apiVersion: v2
+    appVersion: 5.2.0-1-ce
+    created: "2025-08-04T10:30:03.245860901+01:00"
+    dependencies:
+    - name: passbolt-library
+      repository: https://download.passbolt.com/charts/passbolt-library
+      version: 0.2.7
+    - condition: mariadbDependencyEnabled
+      name: mariadb
+      repository: https://linprofs.github.io/helm-charts/
+      version: 4.4.0
+    description: Helm chart for passbolt PRO and CE
+    digest: 6e966c0c945905f3f69101d89715e661348b6f413156711beb9f686505426bfd
+    kubeVersion: '>= 1.19.0-0'
+    name: passbolt
+    type: application
+    urls:
+    - https://linprofs.github.io/helm-charts/passbolt-1.3.3.tgz
+    version: 1.3.3
+generated: "2025-08-04T10:30:03.240563178+01:00"
