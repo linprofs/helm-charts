@@ -1,0 +1,9 @@
+dependencies:
+- name: passbolt-library
+  repository: https://download.passbolt.com/charts/passbolt-library
+  version: 0.2.7
+- name: mariadb
+  repository: https://linprofs.github.io/helm-charts/
+  version: 4.4.0
+digest: sha256:ac3a091af88f627a733c8c8507b24a0ce90818453a33060c863223dda8124e4a
+generated: "2025-08-04T10:24:11.060973168+01:00"

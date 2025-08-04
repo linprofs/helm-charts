@@ -1,0 +1,76 @@
+{{- if and .Values.passboltEnv.plain.PASSBOLT_PLUGINS_JWT_AUTHENTICATION_ENABLED ( not .Values.jwtExistingSecret ) (or ( not .Values.jwtServerPrivate ) ( not .Values.jwtServerPublic )) }}
+{{- $type := "job" -}}
+{{- $action := "create-jwt-keys" -}}
+{{- $Name := include "passbolt-library.fullname" . -}}
+{{- $fullName := printf "%s-%s-%s" $Name $type $action -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "passbolt-library.labels" . | nindent 4 }}
+    {{- include "passbolt-library.typelabels" (dict "action" $action "type" $type) | nindent 4 }}
+  annotations:
+    {{- if .Release.IsInstall }}
+    helm.sh/hook: pre-install
+    {{- else if .Values.jwtCreateKeysForced }}
+    helm.sh/hook: pre-upgrade
+    {{- end }}
+    helm.sh/hook-weight: "0"
+spec:
+  template:
+    metadata:
+      labels:
+      {{- include "passbolt-library.typelabels" (dict "action" $action "type" $type) | nindent 8 }}
+      {{- with .Values.jobCreateJwtKeys.extraPodLabels }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "passbolt.pullSecrets" ( dict "images" (list .Values.imagePullSecrets ) "global" .Values.global) | nindent 6 }}
+      serviceAccountName: {{ $Name }}-sa-{{ $action }}
+      restartPolicy: OnFailure
+      containers:
+        - name: create-jwt-keys
+          image: {{ include "passbolt.image" (dict "imageRoot" .Values.app.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+          command:
+            - "/bin/bash"
+          args:
+            - "-c"
+            - |
+              set -e
+
+              /usr/share/php/passbolt/bin/cake passbolt create_jwt_keys
+              PRIVATE_JWT_KEY="$(cat {{ .Values.jwtPath }}/jwt.key | base64 -w0 )"
+              PUBLIC_JWT_KEY="$(cat {{ .Values.jwtPath }}/jwt.pem | base64 -w0 )"
+
+              cd /tmp
+              cpuArch=${CPU_ARCH:-$(eval "case `uname -m` in 'x86_64') echo 'amd64';;'aarch64') echo 'arm64';;esac")}
+              kubectlDownload=${KUBECTL_DOWNLOAD_CMD:-'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${cpuArch}/kubectl"'}
+              eval $kubectlDownload
+              chmod +x kubectl
+              ./kubectl patch secret {{ include "passbolt.jwt.secretName" ( dict "name" $Name "Values" $.Values ) }} --type='json' -p='[{"op": "replace", "path" : "/data/jwt.key", "value" : '"${PRIVATE_JWT_KEY}"'}]'
+              ./kubectl patch secret {{ include "passbolt.jwt.secretName" ( dict "name" $Name "Values" $.Values ) }} --type='json' -p='[{"op": "replace", "path" : "/data/jwt.pem", "value" : '"${PUBLIC_JWT_KEY}"'}]'
+              touch /tmp/pod/success
+              echo "Success"
+          env:
+            - name: DATASOURCES_DEFAULT_HOST
+              value: {{ include "passbolt.databaseServiceName" . }}
+            {{- with .Values.passboltEnv.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ default (printf "%s-cm-env" $Name) .Values.passboltEnv.configMapName }}
+            - secretRef:
+                name: {{ default (printf "%s-sec-env" $Name) .Values.passboltEnv.secretName }}
+            {{- with .Values.passboltEnv.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: vol-success
+              mountPath: /tmp/pod
+      volumes:
+        - name: vol-success
+          emptyDir: {}
+{{- end }}

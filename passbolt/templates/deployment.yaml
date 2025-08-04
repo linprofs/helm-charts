@@ -1,0 +1,225 @@
+{{- $type := "depl" -}}
+{{- $action := "srv" -}}
+{{- $Name := include "passbolt-library.fullname" . -}}
+{{- $fullName := printf "%s-%s-%s" $Name $type $action -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "passbolt-library.labels" . | nindent 4 }}
+    {{- include "passbolt-library.selectorLabels" . | nindent 4 }}
+    {{- include "passbolt-library.typelabels" (dict "action" $action "type" $type) | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  {{ include "passbolt-library.selector" . | nindent 2 }}
+  template:
+    metadata:
+      labels:
+        {{- include "passbolt-library.selectorLabels" . | nindent 8 }}
+        {{- with .Values.app.extraPodLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{ if ( not $.Values.passboltEnv.secretName ) }}
+        checksum/sec-env: {{ include (print $.Template.BasePath "/secret-env.yaml") . | sha256sum }}
+        {{- end }}
+        {{ if ( not $.Values.gpgExistingSecret ) }}
+        checksum/sec-gpg: {{ include (print $.Template.BasePath "/secret-gpg.yaml") . | sha256sum }}
+        {{- end }}
+        {{ if ( not $.Values.passboltEnv.configMapName ) }}
+        checksum/cm-env: {{ include (print $.Template.BasePath "/configmap-env.yaml") . | sha256sum }}
+        {{- end }}
+        {{- if and .Values.passboltEnv.plain.PASSBOLT_PLUGINS_JWT_AUTHENTICATION_ENABLED ( not .Values.jwtExistingSecret ) }}
+        checksum/sec-jwt: {{ include (print $.Template.BasePath "/secret-jwt.yaml") . | sha256sum }}
+        {{- end }}
+    spec:
+      {{- include "passbolt.pullSecrets" ( dict "images" (list .Values.imagePullSecrets ) "global" .Values.global) | nindent 6 }}
+      serviceAccountName: {{ $Name }}-sa-common
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        {{- if .Values.app.databaseInitContainer.enabled }}
+        - name: {{ $fullName }}-init
+          {{ include "passbolt.initImage" . | nindent 10 }}
+          command:
+            - "/bin/bash"
+          args:
+            - "-c"
+            - |
+              set -e
+              client="{{- include "passbolt.databaseClient" . }}"
+              {{- if or ( eq .Values.app.database.kind "mysql" ) ( eq .Values.app.database.kind "mariadb" ) }}
+              cat <<-EOF > /tmp/defaultsfile.cnf
+              [client]
+              user=${DATASOURCES_DEFAULT_USERNAME}
+              password=${DATASOURCES_DEFAULT_PASSWORD}
+              host=${DATASOURCES_DEFAULT_HOST}
+              connect-timeout=2
+              ssl={{ .Values.app.database.ssl | default "off" }}
+              EOF
+              userhost="%"
+              client="{{- include "passbolt.databaseClient" . }}"
+              while ! ${client} --defaults-file=/tmp/defaultsfile.cnf -e "SELECT 1" > /dev/null 2>&1; do
+                echo "Waiting for database connection..."
+                sleep 2
+              done
+              {{- end -}}
+              {{ if eq .Values.app.database.kind "postgresql" }}
+              apt update
+              apt install -y postgresql-client
+              cat <<-EOF > /tmp/.pgpass
+              ${DATASOURCES_DEFAULT_HOST}:${DATASOURCES_DEFAULT_PORT}:*:${DATASOURCES_DEFAULT_USERNAME}:${DATASOURCES_DEFAULT_PASSWORD}
+              EOF
+              chmod 600 /tmp/.pgpass
+              export PGPASSFILE='/tmp/.pgpass'
+              while ! ${client} -h ${DATASOURCES_DEFAULT_HOST} -p ${DATASOURCES_DEFAULT_PORT} ; do
+                echo "Waiting for postgresql database connection..."
+                sleep 2
+              done
+              {{- end }}
+          env:
+            - name: DATASOURCES_DEFAULT_HOST
+              value: {{ include "passbolt.databaseServiceName" . }}
+            - name: DATASOURCES_DEFAULT_PORT
+              value: {{ include "passbolt.databasePort" . }}
+            {{- with .Values.passboltEnv.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ default (printf "%s-cm-env" $Name) .Values.passboltEnv.configMapName }}
+            - secretRef:
+                name: {{ default (printf "%s-sec-env" $Name) .Values.passboltEnv.secretName }}
+            {{- with .Values.passboltEnv.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{- end }}
+      containers:
+        - name: passbolt
+          command:
+            - "/bin/bash"
+          args:
+            - "-c"
+            - |
+              set -e
+              > /etc/supervisor/conf.d/cron.conf
+              /docker-entrypoint.sh
+          image: {{ include "passbolt.image" (dict "imageRoot" .Values.app.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+          ports:
+          - name: https
+            containerPort: {{ .Values.service.ports.https.targetPort }}
+            protocol: TCP
+          - name: http
+            containerPort: {{ .Values.service.ports.http.targetPort }}
+            protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          env:
+            - name: DATASOURCES_DEFAULT_HOST
+              value: {{ include "passbolt.databaseServiceName" . }}
+            {{- with .Values.passboltEnv.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ default (printf "%s-cm-env" $Name) .Values.passboltEnv.configMapName }}
+            - secretRef:
+                name: {{ default (printf "%s-sec-env" $Name) .Values.passboltEnv.secretName }}
+            {{- with .Values.passboltEnv.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            {{- if or .Values.app.tls.autogenerate .Values.app.tls.existingSecret }}
+            - mountPath: /etc/ssl/certs/certificate.crt
+              name: sec-tls
+              readOnly: true
+              subPath: certificate.crt
+            - mountPath: /etc/ssl/certs/certificate.key
+              name: sec-tls
+              readOnly: true
+              subPath: certificate.key
+            {{- end }}
+            - name: sec-gpg
+              mountPath: {{ .Values.gpgPath }}
+              readOnly: true
+            {{- if .Values.subscriptionKey }}
+            - name: sec-subscription
+              mountPath: {{ quote .Values.subscription_keyPath }}
+              subPath: subscription_key.txt
+              readOnly: true
+            {{- end }}
+            {{- if .Values.passboltEnv.plain.PASSBOLT_PLUGINS_JWT_AUTHENTICATION_ENABLED }}
+            - name: sec-jwt
+              mountPath: {{ quote .Values.jwtPath }}
+              readOnly: true
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.app.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- if or .Values.app.tls.autogenerate .Values.app.tls.existingSecret }}
+        - name: sec-tls
+          projected:
+            defaultMode: 420
+            sources:
+              - secret:
+                  items:
+                    - key: tls.crt
+                      path: certificate.crt
+                  name: {{ include "passbolt.container.tls.secretName" (dict "name" $Name "tls" .Values.app.tls ) }}
+              - secret:
+                  items:
+                  - key: tls.key
+                    path: certificate.key
+                  name: {{ include "passbolt.container.tls.secretName" (dict "name" $Name "tls" .Values.app.tls ) }}
+        {{- end }}
+        - name: sec-gpg
+          secret:
+            secretName: {{ include "passbolt.gpg.secretName" ( dict "name" $Name "Values" $.Values ) }}
+        {{- if .Values.app.cache.redis.enabled }}
+        - configMap:
+            name: {{ $Name }}-cm-app-php
+          name: cm-app-php
+        {{- end }}
+        {{- if .Values.subscriptionKey }}
+        - name: sec-subscription
+          secret:
+            secretName: {{ $Name }}-sec-subscription
+            items:
+              - key: key
+                path: subscription_key.txt
+        {{- end }}
+        {{- if .Values.passboltEnv.plain.PASSBOLT_PLUGINS_JWT_AUTHENTICATION_ENABLED }}
+        - name: sec-jwt
+          secret:
+            secretName: {{ include "passbolt.jwt.secretName" ( dict "name" $Name "Values" $.Values ) }}
+        {{- end }}
+        {{- if .Values.app.cache.redis.sentinelProxy.enabled }}
+        - name: sec-redis-proxy
+          secret:
+            secretName: {{ $Name }}-sec-redis-proxy
+        {{- end -}}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}

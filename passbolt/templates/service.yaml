@@ -1,0 +1,31 @@
+{{- $type := "svc" -}}
+{{- $action := "common" -}}
+{{- $Name := include "passbolt-library.fullname" . -}}
+{{- $fullName := printf "%s-%s-%s" $Name $type $action -}}
+
+apiVersion: v1
+kind: Service
+metadata:
+  # We make exception here to reduce the interservice naming
+  name: {{ $Name }}
+  labels:
+    {{- include "passbolt-library.labels" . | nindent 4 }}
+    {{- include "passbolt-library.selectorLabels" . | nindent 4 }}
+    {{- include "passbolt-library.typelabels" (dict "action" $action "type" $type) | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.ports.https.port | default 443 }}
+      targetPort: {{ .Values.service.ports.https.targetPort | default 443 }}
+      protocol: TCP
+      name: {{ .Values.service.ports.https.name | default "https" }}
+    - port: {{ .Values.service.ports.http.port | default 80 }}
+      targetPort: {{ .Values.service.ports.http.targetPort | default 80 }}
+      protocol: TCP
+      name: {{ .Values.service.ports.http.name | default "http" }}
+  selector:
+    {{- include "passbolt-library.selectorLabels" . | nindent 4 }}

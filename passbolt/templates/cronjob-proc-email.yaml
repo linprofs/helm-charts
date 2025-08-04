@@ -1,0 +1,76 @@
+{{- if .Values.cronJobEmail.enabled }}
+{{- $type := "cron" -}}
+{{- $action := "proc-email" -}}
+{{- $Name := include "passbolt-library.fullname" . -}}
+{{- $fullName := printf "%s-%s-%s" $Name $type $action -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "passbolt-library.labels" . | nindent 4 }}
+    {{- include "passbolt-library.typelabels" (dict "action" $action "type" $type) | nindent 4 }}
+spec:
+  schedule: {{ .Values.cronJobEmail.schedule | quote }}
+  concurrencyPolicy: {{ .Values.cronJobEmail.concurrencyPolicy | default "Replace" }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+           {{- include "passbolt-library.typelabels" (dict "action" $action "type" $type) | nindent 12 }}
+           {{- with .Values.cronJobEmail.extraPodLabels }}
+             {{- toYaml . | nindent 12 }}
+           {{- end }}
+        spec:
+          {{- include "passbolt.pullSecrets" ( dict "images" (list .Values.imagePullSecrets ) "global" .Values.global) | nindent 10 }}
+          serviceAccountName: {{ $Name }}-sa-common
+          restartPolicy: OnFailure
+          securityContext:
+            runAsUser: 33
+            fsGroup: 33
+          containers:
+            - name: proc-email
+              image: {{ include "passbolt.image" (dict "imageRoot" .Values.app.image "global" .Values.global) }}
+              imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+              command:
+                - "/bin/bash"
+              args:
+                - "-c"
+                - |
+                  sleep 10
+                  echo "Sending emails" \
+                  && bin/cron \
+                  && touch /tmp/pod/success
+              env:
+                - name: DATASOURCES_DEFAULT_HOST
+                  value: {{ include "passbolt.databaseServiceName" . }}
+                {{- with .Values.passboltEnv.extraEnv }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+              envFrom:
+                - configMapRef:
+                    name: {{ default (printf "%s-cm-env" $Name) .Values.passboltEnv.configMapName }}
+                - secretRef:
+                    name: {{ default (printf "%s-sec-env" $Name) .Values.passboltEnv.secretName }}
+                {{- with .Values.passboltEnv.extraEnvFrom }}
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+              volumeMounts:
+                - name: vol-success
+                  mountPath: /tmp/pod
+                - name: sec-gpg
+                  mountPath: {{ .Values.gpgPath }}
+                  readOnly: true
+          volumes:
+            - name: vol-success
+              emptyDir: {}
+            - name: sec-gpg
+              secret:
+                secretName: {{ include "passbolt.gpg.secretName" ( dict "name" $Name "Values" $.Values ) }}
+            {{- if .Values.app.cache.redis.sentinelProxy.enabled }}
+            - name: sec-redis-proxy
+              secret:
+                secretName: {{ $Name }}-sec-redis-proxy
+            {{- end -}}
+{{- end -}}
