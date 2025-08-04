@@ -1,0 +1,13 @@
+apiVersion: v2
+appVersion: 11.8.2
+description: A Helm chart for MariaDB on Kubernetes
+icon: https://mariadb.com/wp-content/uploads/2019/11/mariadb-logo_black-transparent-600x150.png
+keywords:
+- database
+- mariadb
+maintainers:
+- name: linprofs
+  url: https://github.com/linprofs/helm-charts
+name: mariadb
+type: application
+version: 4.4.0
