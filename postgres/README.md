@@ -1,17 +1,27 @@
-# MariaDB
+# PostgreSQL
 
-![Version: 4.4.0](https://img.shields.io/badge/Version-4.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 11.8.2](https://img.shields.io/badge/AppVersion-11.8.2-informational?style=flat-square)
+![Version: 1.5.5](https://img.shields.io/badge/Version-1.5.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 17.5](https://img.shields.io/badge/AppVersion-17.5-informational?style=flat-square)
+
+A Helm chart for PostgreSQL on Kubernetes
+
+## Changelog
+
+see [RELEASENOTES.md](RELEASENOTES.md)
+
+## ⚠️ Warning
+
+There is no automatic database upgrade from PostgreSQL 13.x (Chart version 0.2.x) to PostgreSQL 14.x (Chart version 0.3.x) or Postgres 14.x to Postgres 15.x (Chart version 0.4.x) etc. Upgrade deployment will fail in case of a major version change.
 
 ## TL;DR
 
 ```bash
 helm repo add linprofs https://linprofs.github.io/helm-charts/
-helm install my-release linprofs/mariadb
+helm install my-release linprofs/postgres
 ```
 
 ## Introduction
 
-This chart uses the original [MariaDB image from Docker Hub](https://hub.docker.com/_/mariadb) to deploy a stateful MariaDB instance in a Kubernetes cluster.
+This chart uses the original [PostgreSQL image from Docker Hub](https://hub.docker.com/_/postgres/) to deploy a stateful PostgreSQL instance in a Kubernetes cluster.
 
 It fully supports deployment of the multi-architecture docker image.
 
@@ -26,7 +36,7 @@ It fully supports deployment of the multi-architecture docker image.
 To install the chart with the release name `my-release`:
 
 ```bash
-helm install my-release linprofs/mariadb
+helm install my-release linprofs/postgres
 ```
 
 ## Uninstalling the Chart
@@ -52,7 +62,7 @@ helm uninstall my-release
 |-----|------|---------|-------------|
 | `image.pullPolicy` | string | `"IfNotPresent"` | Image pull policy |
 | `image.registry` | string | `"docker.io"` | Image registry |
-| `image.repository` | string | `"mariadb"` | Image name |
+| `image.repository` | string | `"postgres"` | Image name |
 | `image.tag` | string | `""` | Image tag (overrides the chart's appVersion) |
 | `imagePullSecrets` | list | `[]` | Image pull secrets |
 
@@ -70,7 +80,6 @@ helm uninstall my-release
 | `customLivenessProbe` | object | `{}` | Custom liveness probe (overwrites default liveness probe configuration) |
 | `customReadinessProbe` | object | `{}` | Custom readiness probe (overwrites default readiness probe configuration) |
 | `resources` | object | `{}` | Resource limits and requests |
-| `initResources` | object | `{}` | Resource limits and requests for the default init container |
 | `nodeSelector` | object | `{}` | Deployment node selector |
 | `customLabels` | object | `{}` | Additional labels for Deployment or StatefulSet |
 | `customAnnotations` | object | `{}` | Additional annotations for Deployment or StatefulSet |
@@ -79,8 +88,9 @@ helm uninstall my-release
 | `podSecurityContext` | object | `see values.yaml` | Pod security context |
 | `securityContext` | object | `see values.yaml` | Container security context |
 | `env` | list | `[]` | Additional container environmment variables |
+| `args` | list | `[]` | Arguments for the container entrypoint process |
 | `serviceAccount.annotations` | object | `{}` | Additional service account annotations |
-| `serviceAccount.create` | bool | `false` | Enable service account creation |
+| `serviceAccount.create` | bool | `true` | Enable service account creation |
 | `serviceAccount.name` | string | `""` | Name of the service account |
 | `affinity` | object | `{}` | Affinity for pod assignment |
 | `tolerations` | list | `[]` | Tolerations for pod assignment |
@@ -94,7 +104,7 @@ helm uninstall my-release
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `service.type` | string | `"ClusterIP"` | Service type |
-| `service.port` | int | `3306` | MariaDB service port |
+| `service.port` | int | `5432` | PostreSQL service port |
 | `service.nodePort` | int | `nil` | The node port (only relevant for type LoadBalancer or NodePort) |
 | `service.clusterIP` | string | `nil` | The cluster ip address (only relevant for type LoadBalancer or NodePort) |
 | `service.loadBalancerIP` | string | `nil` | The load balancer ip address (only relevant for type LoadBalancer) |
@@ -114,9 +124,8 @@ helm uninstall my-release
 |-----|------|---------|-------------|
 | `storage.accessModes[0]` | string | `"ReadWriteOnce"` | Storage access mode |
 | `storage.persistentVolumeClaimName` | string | `nil` | PVC name when existing storage volume should be used |
-| `storage.volumeName` | string | `"db-volume"` | Internal volume name and prefix of a created PVC |
+| `storage.volumeName` | string | `"postgres-data"` | Internal volume name and prefix of a created PVC |
 | `storage.requestedSize` | string | `nil` | Size for new PVC, when no existing PVC is used |
-| `storage.emptyDirSizeLimit` | string | `nil` | Optional max size of an emptyDir if no PVC is used |
 | `storage.className` | string | `nil` | Storage class name |
 | `storage.keepPvc` | bool | `false` | Keep a created Persistent volume claim when uninstalling the helm chart (only for option `useDeployment: true`) |
 | `storage.annotations` | object | `{}` | Additional storage annotations |
@@ -126,16 +135,16 @@ helm uninstall my-release
 | `extraStorage[].pvcName` | string | `nil` | Name of the existing PVC |
 | `extraStorage[].mountPath` | string | `nil` | Mount path where the PVC should be mounted into the container |
 
-### MariaDB
+### PostgreSQL
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `settings.existingSecret` | string | `nil` | Optional existing secret for the root password |
-| `settings.rootPassword.secretKey` | string | `nil` | Key of existingSecret for the MariaDB root password |
-| `settings.rootPassword.value` | string | `nil` | MariaDB root password (if no existingSecret was specified) |
-| `settings.allowEmptyRootPassword` | bool | `false` | Set true to allow an empty root password |
-| `settings.skipTZInfo` | bool | `false` | Set true to skip loading timezone data during init |
-| `settings.arguments` | list | `[]` | Additional arguments for mysqld (entrypoint process) |
+| `settings.authMethod` | string | `nil` | Postgres database authentication method |
+| `settings.initDbArgs` | string | `nil` | Optional init database arguments |
+| `settings.superuser.secretKey` | string | `nil` | Key of existingSecret for the Superuser name |
+| `settings.superuser.value` | string | `nil` | Superuser name (if no existingSecret was specified) - defaults to "postgres" |
+| `settings.superuserPassword.secretKey` | string | `nil` | Key of existingSecret for the Superuser password |
+| `settings.superuserPassword.value` | string | `nil` | Password of Superuser (if no existingSecret was specified) |
 | `userDatabase.existingSecret` | string | `nil` | Optional existing secret with database name, user and password |
 | `userDatabase.name.secretKey` | string | `""` | Key of the existingSecret with database name |
 | `userDatabase.name.value` | string | `""` | Name of the user database (if no existingSecret was specified) |
@@ -143,9 +152,9 @@ helm uninstall my-release
 | `userDatabase.user.value` | string | `""` | User name with full access to user database (if no existingSecret was specified) |
 | `userDatabase.password.secretKey` | string | `""` | Key of the existingSecret with password of created user |
 | `userDatabase.password.value` | string | `""` | Password of created user (if no existingSecret was specified) |
-| `customConfig` | string | `nil` | Additional MariaDB custom configuration mounted as `/etc/mysql/custom.cnf` |
+| `customConfig` | string | `nil` | Optional custom configuration block that will be mounted as file in `/etc/postgresql/postgresql.conf` |
 | `extraEnvSecrets` | list | `[]` | A list of existing secrets that will be mounted into the container as environment variables |
-| `extraSecretConfigs` | string | `nil` | An existing secret with files that will be mounted into the container as custom MariaDB configuration files (`*.cnf`) in `/etc/mysql/conf.d` |
+| `extraSecretConfigs` | string | `nil` | An existing secret with files that will be added to the postgres configuration in addition to `/etc/postgresql/postgresql.conf` |
 | `customScripts` | object | `nil` | Optional custom scripts that can be defined inline and will be mounted as files in `/docker-entrypoint-initdb.d` |
 | `extraScripts` | string | `nil` | An existing configMap with files that will be mounted into the container as script files (`*.sql`, `*.sh`) in `/docker-entrypoint-initdb.d` |
 | `extraSecrets` | list | `[]` | A list of additional existing secrets that will be mounted into the container |
@@ -161,15 +170,16 @@ helm uninstall my-release
 
 It is possible to use an existing secret for the database credentials. This is useful when you want to manage the credentials outside of the Helm chart.
 
-To use an existing secret, you need to set the `settings.existingSecret` parameter to the name of the secret. The secret must contain the following key:
+To use an existing secret, you need to set the `settings.existingSecret` parameter to the name of the secret. The secret must contain the following keys:
 
-- `MARIADB_ROOT_PASSWORD`: The root password.
+- `POSTGRES_USER`: The superuser name.
+- `POSTGRES_PASSWORD`: The superuser password.
 
 If you also want to create a user database, you can add the following keys to the secret:
 
-- `MARIADB_DATABASE`: The name of the user database.
-- `MARIADB_USER`: The user name with full access to the user database.
-- `MARIADB_PASSWORD`: The password of the created user.
+- `POSTGRES_DB`: The name of the user database.
+- `USERDB_USER`: The user name with full access to the user database.
+- `USERDB_PASSWORD`: The password of the created user.
 
 ## Custom Scripts
 

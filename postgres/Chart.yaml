@@ -1,0 +1,13 @@
+apiVersion: v2
+appVersion: "17.5"
+description: A Helm chart for PostgreSQL on Kubernetes
+icon: https://www.postgresql.org/media/img/about/press/elephant64.png
+keywords:
+- database
+- postgres
+maintainers:
+- name: linprofs
+  url: https://github.com/linprofs/helm-charts
+name: postgres
+type: application
+version: 1.5.5
