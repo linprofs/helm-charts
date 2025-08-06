@@ -3,7 +3,7 @@ entries:
   mariadb:
   - apiVersion: v2
     appVersion: 11.8.2
-    created: "2025-08-04T10:39:50.132956891+01:00"
+    created: "2025-08-06T09:25:51.591215537+01:00"
     description: A Helm chart for MariaDB on Kubernetes
     digest: 6f343cee4dd92d7b2a022634ec69a2858c0ffada58e1abcab6cf45b5f6016167
     icon: https://mariadb.com/wp-content/uploads/2019/11/mariadb-logo_black-transparent-600x150.png
@@ -21,7 +21,7 @@ entries:
   passbolt:
   - apiVersion: v2
     appVersion: 5.2.0-1-ce
-    created: "2025-08-04T10:39:50.136154417+01:00"
+    created: "2025-08-06T09:25:51.594615387+01:00"
     dependencies:
     - name: passbolt-library
       repository: https://download.passbolt.com/charts/passbolt-library
@@ -38,4 +38,22 @@ entries:
     urls:
     - https://linprofs.github.io/helm-charts/passbolt-1.3.3.tgz
     version: 1.3.3
-generated: "2025-08-04T10:39:50.132240206+01:00"
+  postgres:
+  - apiVersion: v2
+    appVersion: "17.5"
+    created: "2025-08-06T09:25:51.595499936+01:00"
+    description: A Helm chart for PostgreSQL on Kubernetes
+    digest: 0c039f78aac9a1fee8d4476b41fd6990e9ebaed92a8fe133b4dad1e2d53471f9
+    icon: https://www.postgresql.org/media/img/about/press/elephant64.png
+    keywords:
+    - database
+    - postgres
+    maintainers:
+    - name: linprofs
+      url: https://github.com/linprofs/helm-charts
+    name: postgres
+    type: application
+    urls:
+    - https://linprofs.github.io/helm-charts/postgres-1.5.5.tgz
+    version: 1.5.5
+generated: "2025-08-06T09:25:51.588792647+01:00"
