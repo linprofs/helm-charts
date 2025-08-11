@@ -1,0 +1,13 @@
+apiVersion: v2
+appVersion: 6.8.0-apache
+dependencies:
+- condition: mariadb.enabled
+  name: mariadb
+  repository: https://linprofs.github.io/helm-charts/
+  version: 4.4.0
+description: A Helm chart for Wordpress on Kubernetes
+maintainers:
+- name: linprofs
+name: wordpress
+type: application
+version: 0.14.0
