@@ -3,7 +3,7 @@ entries:
   mariadb:
   - apiVersion: v2
     appVersion: 11.8.2
-    created: "2025-08-11T08:14:31.565272364+01:00"
+    created: "2025-08-11T09:13:19.100800345+01:00"
     description: A Helm chart for MariaDB on Kubernetes
     digest: 6f343cee4dd92d7b2a022634ec69a2858c0ffada58e1abcab6cf45b5f6016167
     icon: https://mariadb.com/wp-content/uploads/2019/11/mariadb-logo_black-transparent-600x150.png
@@ -16,12 +16,12 @@ entries:
     name: mariadb
     type: application
     urls:
-    - https://linprofs.com/helm-charts/docs/mariadb-4.4.0.tgz
+    - https://linprofs.github.io/helm-charts/docs/mariadb-4.4.0.tgz
     version: 4.4.0
   passbolt:
   - apiVersion: v2
     appVersion: 5.2.0-1-ce
-    created: "2025-08-11T08:14:31.568155701+01:00"
+    created: "2025-08-11T09:13:19.104454776+01:00"
     dependencies:
     - name: passbolt-library
       repository: https://download.passbolt.com/charts/passbolt-library
@@ -36,12 +36,12 @@ entries:
     name: passbolt
     type: application
     urls:
-    - https://linprofs.com/helm-charts/docs/passbolt-1.3.3.tgz
+    - https://linprofs.github.io/helm-charts/docs/passbolt-1.3.3.tgz
     version: 1.3.3
   postgres:
   - apiVersion: v2
     appVersion: "17.5"
-    created: "2025-08-11T08:14:31.568652209+01:00"
+    created: "2025-08-11T09:13:19.10492402+01:00"
     description: A Helm chart for PostgreSQL on Kubernetes
     digest: 551b727712658a448bf93d1d897b270853ec529b995682aba0837d1373188e02
     icon: https://www.postgresql.org/media/img/about/press/elephant64.png
@@ -54,12 +54,12 @@ entries:
     name: postgres
     type: application
     urls:
-    - https://linprofs.com/helm-charts/docs/postgres-1.5.5.tgz
+    - https://linprofs.github.io/helm-charts/docs/postgres-1.5.5.tgz
     version: 1.5.5
   wordpress:
   - apiVersion: v2
     appVersion: 6.8.0-apache
-    created: "2025-08-11T08:14:31.564836477+01:00"
+    created: "2025-08-11T09:13:19.105886057+01:00"
     dependencies:
     - condition: mariadb.enabled
       name: mariadb
@@ -72,6 +72,6 @@ entries:
     name: wordpress
     type: application
     urls:
-    - https://linprofs.com/helm-charts/docs/wordpress-0.14.0.tgz
+    - https://linprofs.github.io/helm-charts/docs/wordpress-0.14.0.tgz
     version: 0.14.0
-generated: "2025-08-11T08:14:31.563184024+01:00"
+generated: "2025-08-11T09:13:19.100209465+01:00"
