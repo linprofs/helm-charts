@@ -72,6 +72,6 @@ entries:
     name: wordpress
     type: application
     urls:
-    - https://linprofs.com/helm-charts/wordpress-0.14.0.tgz
+    - https://linprofs.com/helm-charts/docs/wordpress-0.14.0.tgz
     version: 0.14.0
 generated: "2025-08-11T08:14:31.563184024+01:00"
