@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: 5.2.0-1-ce
+appVersion: 5.6.0-1-ce
 dependencies:
 - name: passbolt-library
   repository: https://download.passbolt.com/charts/passbolt-library

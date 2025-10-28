@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: 6.8.0-apache
+appVersion: 6.8.3
 dependencies:
 - condition: mariadb.enabled
   name: mariadb
@@ -10,4 +10,4 @@ maintainers:
 - name: linprofs
 name: wordpress
 type: application
-version: 0.14.0
+version: 0.14.1

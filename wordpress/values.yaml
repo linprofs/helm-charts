@@ -153,7 +153,7 @@ extraInitContainers:
       - -c
       - |
         echo "Waiting for MariaDB..."
-        until mysql -h test-wordpress-mariadb -uroot -ppassword -e "SELECT 1" > /dev/null 2>&1; do
+        until mysql -h wordpress-mariadb -ulp_admin -ptest -e "SELECT 1" > /dev/null 2>&1; do
           echo "MariaDB not ready yet..."
           sleep 3
         done
