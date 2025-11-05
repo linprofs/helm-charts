@@ -3,9 +3,9 @@ entries:
   mariadb:
   - apiVersion: v2
     appVersion: 12.0.2
-    created: "2025-11-05T13:00:44.953821991Z"
+    created: "2025-11-05T13:39:59.622091735Z"
     description: A Helm chart for MariaDB on Kubernetes
-    digest: 200436e40865ff8020114091b3ab4bb0f9f37cfa3a940d9f0c68aac22c4e68c7
+    digest: de65bbca4f6aeffeb2bd69b64b6327807a652978b7d9baa2e1fbad71053a9cb8
     icon: https://mariadb.com/wp-content/uploads/2019/11/mariadb-logo_black-transparent-600x150.png
     keywords:
     - database
@@ -20,7 +20,7 @@ entries:
     version: 4.4.1
   - apiVersion: v2
     appVersion: 12.0.2
-    created: "2025-11-05T13:00:44.953326867Z"
+    created: "2025-11-05T13:39:59.621585889Z"
     description: A Helm chart for MariaDB on Kubernetes
     digest: 5bc6898d28f9966cea0913bb9fa6ae96d17fd473de277c87ce13631841d62462
     icon: https://mariadb.com/wp-content/uploads/2019/11/mariadb-logo_black-transparent-600x150.png
@@ -38,7 +38,26 @@ entries:
   passbolt:
   - apiVersion: v2
     appVersion: 5.6.0-1-ce
-    created: "2025-11-05T13:00:44.956412873Z"
+    created: "2025-11-05T13:39:59.628480047Z"
+    dependencies:
+    - name: passbolt-library
+      repository: https://download.passbolt.com/charts/passbolt-library
+      version: 0.2.7
+    - condition: mariadbDependencyEnabled
+      name: mariadb
+      repository: https://linprofs.github.io/helm-charts/
+      version: 4.4.1
+    description: Helm chart for passbolt PRO and CE
+    digest: 865bdb183433bc06b97797d00304f7210714d13ff8ea9238dfb3b04b6360d836
+    kubeVersion: '>= 1.19.0-0'
+    name: passbolt
+    type: application
+    urls:
+    - https://linprofs.github.io/helm-charts/passbolt-1.3.4.tgz
+    version: 1.3.4
+  - apiVersion: v2
+    appVersion: 5.6.0-1-ce
+    created: "2025-11-05T13:39:59.625819519Z"
     dependencies:
     - name: passbolt-library
       repository: https://download.passbolt.com/charts/passbolt-library
@@ -58,9 +77,9 @@ entries:
   postgres:
   - apiVersion: v2
     appVersion: "17.6"
-    created: "2025-11-05T13:00:44.957162276Z"
+    created: "2025-11-05T13:39:59.628947484Z"
     description: A Helm chart for PostgreSQL on Kubernetes
-    digest: 0f4262f586de55c3c870939a85508b1e6e1ac5fc4d0426e631924abb1fc36492
+    digest: d0ed4f0253ed255b013ac8358a37d03ef0b5a4409b2b8f59bba116a998e3fc29
     icon: https://www.postgresql.org/media/img/about/press/elephant64.png
     keywords:
     - database
@@ -76,14 +95,14 @@ entries:
   wordpress:
   - apiVersion: v2
     appVersion: 6.8.3
-    created: "2025-11-05T13:00:44.960142591Z"
+    created: "2025-11-05T13:39:59.630902263Z"
     dependencies:
     - condition: mariadb.enabled
       name: mariadb
       repository: https://linprofs.github.io/helm-charts/
       version: 4.4.0
     description: A Helm chart for Wordpress on Kubernetes
-    digest: 0ff0cd0144d48f31b6100e7b55b11b65c3db634beda45cbf0e397c58648cef3c
+    digest: cda5aff3cb05f9f39b649cdaefa0f411ad22c20079287dce89669c0c2681ade4
     maintainers:
     - name: linprofs
     name: wordpress
@@ -93,7 +112,7 @@ entries:
     version: 0.14.1
   - apiVersion: v2
     appVersion: 6.8.2-apache
-    created: "2025-11-05T13:00:44.959047647Z"
+    created: "2025-11-05T13:39:59.630109158Z"
     dependencies:
     - condition: mariadb.enabled
       name: mariadb
@@ -108,4 +127,4 @@ entries:
     urls:
     - https://linprofs.github.io/helm-charts/wordpress-0.14.0.tgz
     version: 0.14.0
-generated: "2025-11-05T13:00:44.951517229Z"
+generated: "2025-11-05T13:39:59.620246715Z"
