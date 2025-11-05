@@ -54,7 +54,7 @@ entries:
     type: application
     urls:
     - https://linprofs.github.io/helm-charts/passbolt-1.3.3.tgz
-    version: 1.3.3
+    version: 1.3.4
   postgres:
   - apiVersion: v2
     appVersion: "17.6"
