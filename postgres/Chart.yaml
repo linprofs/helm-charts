@@ -10,4 +10,4 @@ maintainers:
   url: https://github.com/linprofs/helm-charts
 name: postgres
 type: application
-version: 1.5.5
+version: 1.5.6
