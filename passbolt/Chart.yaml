@@ -7,9 +7,9 @@ dependencies:
 - condition: mariadbDependencyEnabled
   name: mariadb
   repository: https://linprofs.github.io/helm-charts/
-  version: 4.4.0
+  version: 4.4.1
 description: Helm chart for passbolt PRO and CE
 kubeVersion: '>= 1.19.0-0'
 name: passbolt
 type: application
-version: 1.3.3
+version: 1.3.4
