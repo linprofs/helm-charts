@@ -10,4 +10,4 @@ maintainers:
   url: https://github.com/linprofs/helm-charts
 name: mariadb
 type: application
-version: 4.4.0
+version: 4.4.1
